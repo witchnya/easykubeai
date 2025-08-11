@@ -1,17 +1,32 @@
 
 # easykubeai
 
-kubeai 를 참고하여 작성한 헬름 차트 입니다.
-* kubeai.org
+kubeai 헬름차트를 참고하여 작성한 헬름차트 입니다.
+* https://www.kubeai.org
+* https://github.com/substratusai/kubeai
+
+
 
 ## Installation
+
+### Install `easykubeai` Helm Chart
+Edit easykubeai Value and Helm Install. Refer to `values_easykubeai.yaml`
 ```sh
-helm upgrade -i easy easykubeai-0.1.0.tgz -f values_models_ollama_gpu.yaml -n easy
+helm upgrade -i easy easykubeai-0.1.0.tgz -f values_easykubeai.yaml -n easy
 ```
 
 
-## With Open Web UI 
+## Test with `open-webui`
+https://github.com/open-webui/open-webui
+
+### Install `open-webui` Helm Chart 
+Edit open-webui Value and Helm Install. Refer to `values_open-webui.yaml`
 ```sh
 helm upgrade -i open-webui open-webui-7.2.0.tgz -f values_open-webui.yaml -n easy
 ```
 
+### Edit `hosts` and connect `open-webui`
+Add domain and IP `/etc/hosts` or `C:\Windows\System32\drivers\etc\hosts` File.
+```
+xxx.xxx.xxx.xxx open-webui.local
+```
