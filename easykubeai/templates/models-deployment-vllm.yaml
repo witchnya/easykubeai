@@ -1,0 +1,215 @@
+{{- range $svcName, $model := .Values.catalog }}
+  {{- if $model.enabled }}
+  {{- if eq $model.engine "VLLM" }}
+    {{- $modelName := (trimPrefix "hf://" $model.url) }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-deploy-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $svcName) "-" }}
+  labels:
+    app: model-{{ $svcName }}
+    model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
+spec:
+  replicas: {{ $model.replicas | default 1 }}
+
+  selector:
+    matchLabels:
+      app: model-{{ $svcName }}
+      model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
+  template:
+    metadata:
+      labels:
+        app: model-{{ $svcName }}
+        model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
+    spec:
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with (index $.Values.resourceProfiles $model.resourceProfile).runtimeClassName }}
+      runtimeClassName: {{ . }}
+      {{- end }}
+
+      initContainers:
+        - name: ollama-init
+          image: {{ $.Values.modelServers.OLlama.images.default }}
+          imagePullPolicy: "Always"
+          env:
+          - name: OLLAMA_MODELS
+            value: /model
+          command:
+          - /bin/sh
+          - -c
+          - |
+            /bin/ollama serve &
+            echo "Waiting for Ollama server to start..."
+            sleep 10
+            
+            # Pull the model and ensure it downloads successfully
+            echo "Pulling model ..."
+            if ! /bin/ollama pull {{ $modelName }}; then
+                echo "Failed to pull model"
+                exit 1
+            fi
+            
+            # Verify the model files exist
+            echo "Verifying model files..."
+            ls -R /model
+            if [ ! -d "/model/blobs" ] || [ ! -d "/model/manifests" ]; then
+                echo "Model directories not found"
+                exit 1
+            fi
+            
+            echo "Model setup completed successfully"
+            ls -la /model/manifests/registry.ollama.ai/library/
+
+          resources:
+            limits:
+              cpu: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.cpu }}
+              memory: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.memory }}  
+              
+          volumeMounts:
+          - name: models-volume
+            mountPath: /model
+
+
+      initContainers:
+        - name: vllm-init
+          image: {{ $.Values.modelServers.VLLM.images.default }}
+          imagePullPolicy: "Always"
+          env:
+          - name: VLLM_MODELS
+            value: /model
+          - name: HF_HOME
+            value: "/model/.cache/huggingface"
+          command:
+          - /bin/sh
+          - -c
+          - |
+            echo "init"
+            huggingface-cli download {{ $modelName }} --local-dir /model 
+
+          resources:
+            limits:
+              cpu: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.cpu }}
+              memory: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.memory }}  
+              
+          volumeMounts:
+          - name: models-volume
+            mountPath: /model
+
+      containers:
+      - name: vllm-server
+        image: {{ $.Values.modelServers.VLLM.images.default }}
+        imagePullPolicy: "IfNotPresent"
+        command:
+        - python3
+        - -m
+        - vllm.entrypoints.openai.api_server
+        args:
+        - --model={{ $modelName }}
+        - --served-model-name={{ regexReplaceAll "[^a-zA-Z0-9-]" $svcName "-" }}
+        {{- with $model.args }}
+        {{- . | toYaml | nindent 8 }}
+        {{- end }}
+        env:
+        {{- range $k, $v := $model.env }}
+        - name:  {{ $k }}
+          value: {{ $v | quote }}
+        {{- end }}
+        - name: HF_HOME
+          value: "/model/.cache/huggingface"
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: token
+              name: kubeai-huggingface
+              optional: true
+
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 3
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 2
+
+        resources:
+          # $model 의 resourceProfile 에서 가져온 값은 프로파일명 
+          # 예시) cpu2 이면, .Values.resourceProfiles 에서 cpu2 의 requests, limits 를 가져옴
+          # 예시) nvidia-gpu 이면, .Values.resourceProfiles 에서 nvidia-gpu 의 requests, limits 를 가져옴 
+          requests:
+            cpu: {{ (index $.Values.resourceProfiles $model.resourceProfile).requests.cpu }}
+            memory: {{ (index $.Values.resourceProfiles $model.resourceProfile).requests.memory }}  
+          limits:
+            cpu: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.cpu }}
+            memory: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.memory }}  
+
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsUser: 0
+        startupProbe:
+          failureThreshold: 5400
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          periodSeconds: 2
+          successThreshold: 1
+          timeoutSeconds: 2
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: dshm
+        - name: models-volume
+          mountPath: /model
+
+      terminationGracePeriodSeconds: 30
+
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
+      - name: models-volume
+        persistentVolumeClaim:
+          claimName: model-pvc-vllm-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $modelName) "-" }}
+
+     {{- with $model.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $model.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $model.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+{{- end }}
+{{- end }}
+{{- end }}

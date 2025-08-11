@@ -1,0 +1,33 @@
+{{- range $svcName, $model := .Values.catalog }}
+  {{- if $model.enabled }}
+  {{- if eq $model.engine "VLLM" }}
+    {{- $modelName := (trimPrefix "hf://" $model.url) }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $svcName) "-" }}
+  labels:
+    app: model-{{ $svcName }}
+    model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
+
+  {{- with $.Values.modelCache.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 8 }}
+  {{- end }}
+
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ $.Values.modelCache.service.port | default 80 }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: model-{{ $svcName }}
+    model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
+
+  {{- end }}
+  {{- end }}
+{{- end }}

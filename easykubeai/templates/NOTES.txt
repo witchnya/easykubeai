@@ -1,0 +1,20 @@
+###############################################################################
+easykubeai 
+
+1. Deployment Information:
+  - Chart Name: {{ .Chart.Name }}
+  - Release Name: {{ .Release.Name }}
+  - Namespace: {{ .Release.Namespace }}
+
+2. OpenAI Compatiable Service Endpoint:
+{{- range $svcName, $model := .Values.catalog }}
+{{- if $model.enabled }}
+{{- if eq $model.engine "OLlama" }}
+  - http://model-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $svcName) "-" }}.{{ $.Release.Namespace }}:{{ $.Values.modelCache.service.port }}/v1
+{{- else if eq $model.engine "VLLM" }}
+  - http://model-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $svcName) "-" }}.{{ $.Release.Namespace }}:{{ $.Values.modelCache.service.port }}/v1
+{{- end }}
+{{- end }}
+{{- end }}
+
+###############################################################################

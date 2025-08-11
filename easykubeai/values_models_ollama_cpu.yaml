@@ -1,0 +1,60 @@
+
+catalog:
+
+  # Deepseek cpu #
+  deepseek-r1-1.5b-ollama-cpu:
+    enabled: false
+    features: [TextGeneration]
+    url: 'ollama://deepseek-r1:1.5b'
+    modelSize: 1.1Gi
+    engine: OLlama
+    resourceProfile: cpu
+
+
+  # Gemma cpu #
+  gemma3-1b-ollama-cpu:
+    enabled: false
+    features: [TextGeneration]
+    url: "ollama://gemma3:1b"
+    modelSize: 815Mi
+    engine: OLlama
+    resourceProfile: cpu
+
+
+  # Qwen cpu #
+  qwen2.5-coder-1.5b-ollama-cpu:
+    enabled: false
+    features: ["TextGeneration"]
+    url: "ollama://qwen2.5-coder:1.5b"
+    modelSize: 986Mi
+    engine: OLlama
+    resourceProfile: cpu
+  qwen3-1.7b-ollama-cpu:
+    enabled: false
+    features: ["TextGeneration"]
+    url: "ollama://qwen3:1.7b"
+    modelSize: 1.4Gi
+    engine: OLlama
+    resourceProfile: cpu
+
+
+  # Llama cpu #
+  llama3.2-1b-ollama-cpu:
+    enabled: false
+    features: ["TextGeneration"]
+    url: "ollama://llama3.2:1b"
+    modelSize: 1.3Gi
+    engine: OLlama
+    resourceProfile: cpu
+
+
+  # embed cpu # 
+  nomic-embed-text-ollama-cpu:
+    enabled: false
+    features: ["TextEmbedding"]
+    url: "ollama://nomic-embed-text"
+    modelSize: 274Mi
+    engine: OLlama
+    resourceProfile: cpu
+  
+  

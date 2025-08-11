@@ -1,0 +1,45 @@
+{{- $modelNames := dict }}
+
+{{- range $svcName, $model := .Values.catalog}}
+  {{- if $model.enabled }}
+  {{- if $.Values.modelCache.persistence.enabled }}
+  {{- if eq $model.engine "OLlama" }}
+    {{- $modelName := (trimPrefix "ollama://" $model.url) }}
+
+    {{- if not (hasKey $modelNames $modelName) }}
+    {{- $_ := set $modelNames $modelName true }}
+    {{- else }}
+    {{- continue }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+
+{{- range $key, $val := $modelNames }}
+{{- $modelName := $key }}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-pvc-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $modelName) "-" }}
+  labels:
+    model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
+
+  {{- with $.Values.modelCache.persistence.annotations }}
+  annotations:
+    {{- toYaml . | nindent 8 }}
+  {{- end }}
+
+spec:
+  accessModes:
+    {{- range $.Values.modelCache.persistence.accessModes }}
+    - {{ . | quote }}
+    {{- end }}
+  resources:
+    requests:
+      storage: {{ $.Values.modelCache.persistence.size | default "10Gi" }}
+  storageClassName: {{ $.Values.modelCache.persistence.storageClassName | default "" }}
+
+{{- end }}

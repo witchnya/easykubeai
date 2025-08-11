@@ -1,0 +1,40 @@
+
+
+ollama:
+  enabled: false
+pipelines:
+  enabled: true
+
+ingress:
+  enabled: true
+  host: "open-webui.local"
+
+
+# -- OpenAI base API URL to use. Defaults to the Pipelines service endpoint when Pipelines are enabled, and "https://api.openai.com/v1" if Pipelines are not enabled and this value is blank
+openaiBaseApiUrl: ""
+openaiBaseApiUrls:
+- "http://model-gemma3-1b-ollama-cpu:80/v1"
+- "http://model-gemma3-1b-ollama-gpu:80/v1"
+- "http://model-deepseek-r1-distill-qwen-1-5b-vllm-gpu:80/v1"
+
+extraEnvVars:
+- name: WEBUI_AUTH
+  value: "False"
+- name: OPENAI_API_KEYS
+  value: "not-used"
+- name: SHOW_ADMIN_DETAILS
+  value: "false"
+- name: SAFE_MODE
+  value: "true"
+- name: ENABLE_EVALUATION_ARENA_MODELS
+  value: "False"
+
+
+containerSecurityContext:
+  runAsUser: 0
+  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
