@@ -163,7 +163,7 @@ spec:
         persistentVolumeClaim:
           claimName: model-pvc-vllm-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $modelName) "-" }}
 
-     {{- with $model.nodeSelector }}
+      {{- with $model.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}

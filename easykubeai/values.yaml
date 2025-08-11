@@ -58,12 +58,11 @@ resourceProfiles:
     requests:
       nvidia.com/gpu: "1"
       cpu: 1
-      memory: "4Gi"
+      memory: "6Gi"
     limits:
       nvidia.com/gpu: "1"
       cpu: 2
-      memory: "8
-      Gi"
+      memory: "12Gi"
     # tolerations:
     #   - key: "nvidia.com/gpu"
     #     operator: "Equal"
@@ -254,8 +253,10 @@ catalog:
     url: "hf://Qwen/Qwen3-1.7B"
     engine: VLLM
     env:
+      VLLM_ATTENTION_BACKEND: FLASHINFER
     args:
       - --max-model-len=2048
+      - --max-num-seqs=16
       #- --enable-reasoning
       #- --reasoning-parser=deepseek_r1
     resourceProfile: nvidia-gpu

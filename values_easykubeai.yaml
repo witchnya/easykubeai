@@ -35,29 +35,23 @@ modelServers:
 ###############################################################################
 resourceProfiles:
   cpu:
-    requests:
-      cpu: 2
-      # TODO: Consider making this a ratio that is more common on cloud machines
-      # such as 1:4 CPU:Mem. NOTE: This might need to be adjusted for local clusters.
-      memory: "8Gi"
-      # TODO: Consider adding eph storage requests/limits.
-      # Perhaps this is just needed for GKE Autopilot which defaults
-      # to 1Gi for CPU-only.
-      # ephemeral-storage: "2Gi"
-    limits:
-      cpu: 12
-      memory: "24Gi"
+    # requests:
+    #   cpu: 2
+    #   memory: "8Gi"
+    # limits:
+    #   cpu: 12
+    #   memory: "24Gi"
   
   nvidia-gpu:
-    runtimeClassName: "nvidia"
-    requests:
-      nvidia.com/gpu: "1"
-      cpu: 2
-      memory: "4Gi"
-    limits:
-      nvidia.com/gpu: "1"
-      cpu: 6
-      memory: "12Gi"
+    # runtimeClassName: "nvidia"
+    # requests:
+    #   nvidia.com/gpu: "1"
+    #   cpu: 1
+    #   memory: "6Gi"
+    # limits:
+    #   nvidia.com/gpu: "1"
+    #   cpu: 2
+    #   memory: "12Gi"
     # tolerations:
     #   - key: "nvidia.com/gpu"
     #     operator: "Equal"
@@ -76,7 +70,7 @@ catalog:
     enabled: false
 
   gemma3-1b-ollama-gpu:
-    enabled: true
+    enabled: false
 
   deepseek-r1-distill-qwen-1.5b-vllm-gpu:
     enabled: false
@@ -85,7 +79,7 @@ catalog:
     enabled: false
 
   qwen3-1.7b-vllm-gpu:
-    enabled: false
+    enabled: true
 
   qwen3-4b-instruct-2507-vllm-gpu:
     enabled: false
