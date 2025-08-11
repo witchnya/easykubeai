@@ -1,12 +1,12 @@
 imagePullSecrets:
-  #- name: my-registry-secret
+#- name: my-registry-secret
 
 
 ###############################################################################
 modelCache:
   persistence:
     enabled: true
-    storageClassName: "local-path"
+    storageClassName: "default"
     size: "10Gi"
     accessModes:
       - "ReadWriteOnce"
@@ -17,29 +17,29 @@ modelCache:
   service:
     port: 80
     annotations:
-      
+
+
+###############################################################################
+secrets:
+  huggingface:
+    create: false
+    token: ""
+    name: "secret-hf"
 
 
 ###############################################################################
 modelServers:
   VLLM:
     images:
-      # The key is the image name (referenced from resourceProfiles) and the value is the image.
-      # The "default" image should always be specified.
-      # "default" is used when no imageName is specified or if a specific image is not found.
       default: "vllm/vllm-openai:v0.8.3"
-      #nvidia-gpu: "vllm/vllm-openai:v0.8.3"
-      #cpu: "substratusai/vllm:v0.6.3.post1-cpu"
   OLlama:
     images:
       default: "ollama/ollama:latest"
 
 
-
 ###############################################################################
 resourceProfiles:
   cpu:
-    imageName: "cpu"
     requests:
       cpu: 2
       # TODO: Consider making this a ratio that is more common on cloud machines
@@ -54,16 +54,16 @@ resourceProfiles:
       memory: "24Gi"
   
   nvidia-gpu:
-    imageName: "nvidia-gpu"
     runtimeClassName: "nvidia"
     requests:
       nvidia.com/gpu: "1"
-      cpu: 2
+      cpu: 1
       memory: "4Gi"
     limits:
       nvidia.com/gpu: "1"
-      cpu: 12
-      memory: "8Gi"
+      cpu: 2
+      memory: "8
+      Gi"
     # tolerations:
     #   - key: "nvidia.com/gpu"
     #     operator: "Equal"
@@ -78,4 +78,187 @@ resourceProfiles:
 ###############################################################################
 catalog:
 
+  #============================================================================
+  # OLLAMA CPU
 
+  # Deepseek cpu #
+  deepseek-r1-1.5b-ollama-cpu:
+    enabled: false
+    features: [ TextGeneration ]
+    url: 'ollama://deepseek-r1:1.5b'
+    modelSize: 1.1Gi
+    engine: OLlama
+    resourceProfile: cpu
+
+
+  # Gemma cpu #
+  gemma3-1b-ollama-cpu:
+    enabled: false
+    features: [ TextGeneration ]
+    url: "ollama://gemma3:1b"
+    modelSize: 815Mi
+    engine: OLlama
+    resourceProfile: cpu
+
+
+  # Qwen cpu #
+  qwen2.5-coder-1.5b-ollama-cpu:
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "ollama://qwen2.5-coder:1.5b"
+    modelSize: 986Mi
+    engine: OLlama
+    resourceProfile: cpu
+  qwen3-1.7b-ollama-cpu:
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "ollama://qwen3:1.7b"
+    modelSize: 1.4Gi
+    engine: OLlama
+    resourceProfile: cpu
+
+
+  # Llama cpu #
+  llama3.2-1b-ollama-cpu:
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "ollama://llama3.2:1b"
+    modelSize: 1.3Gi
+    engine: OLlama
+    resourceProfile: cpu
+
+
+  # embed cpu #
+  nomic-embed-text-ollama-cpu:
+    enabled: false
+    features: [ "TextEmbedding" ]
+    url: "ollama://nomic-embed-text"
+    modelSize: 274Mi
+    engine: OLlama
+    resourceProfile: cpu
+
+
+  #============================================================================
+  # OLLAMA GPU
+
+  # Deepseek #
+  deepseek-r1-1.5b-ollama-gpu:
+    enabled: false
+    features: [ TextGeneration ]
+    url: 'ollama://deepseek-r1:1.5b'
+    modelSize: 1.1Gi
+    engine: OLlama
+    resourceProfile: nvidia-gpu
+  deepseek-r1-distill-qwen-7b-ollama-gpu:
+    enabled: false
+    features: [ TextGeneration ]
+    url: 'ollama://deepseek-r1:7b'
+    modelSize: 4.7Gi
+    engine: OLlama
+    resourceProfile: nvidia-gpu
+
+
+  # Gemma #
+  gemma3-1b-ollama-gpu:
+    enabled: true
+    features: [ TextGeneration ]
+    url: "ollama://gemma3:1b"
+    modelSize: 815Mi
+    engine: OLlama
+    resourceProfile: nvidia-gpu
+  gemma3-4b-ollama-gpu:
+    enabled: false
+    features: [ TextGeneration ]
+    url: 'ollama://gemma3:4b'
+    modelSize: 3.3Gi
+    engine: OLlama
+    resourceProfile: nvidia-gpu
+
+
+  # Qwen #
+  qwen2.5-coder-1.5b-ollama-gpu:
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "ollama://qwen2.5-coder:1.5b"
+    modelSize: 986Mi
+    engine: OLlama
+    resourceProfile: nvidia-gpu
+  qwen3-1.7b-ollama-gpu:
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "ollama://qwen3:1.7b"
+    modelSize: 1.4Gi
+    engine: OLlama
+    resourceProfile: nvidia-gpu
+  qwen3-4b-ollama-gpu:
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "ollama://qwen3:4b"
+    modelSize: 2.5Gi
+    engine: OLlama
+    resourceProfile: nvidia-gpu
+
+
+  # Llama #
+  llama3.1-8b-ollama-gpu:
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "ollama://llama3.1:8b"
+    modelSize: 4.9Gi
+    engine: OLlama
+    resourceProfile: nvidia-gpu
+  llama3.2-1b-ollama-gpu:
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "ollama://llama3.2:1b"
+    modelSize: 1.3Gi
+    engine: OLlama
+    resourceProfile: nvidia-gpu
+
+
+  #============================================================================
+  # VLLM GPU
+
+  # Deepseek vllm #
+  deepseek-r1-distill-qwen-1.5b-vllm-gpu:
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "hf://deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
+    engine: VLLM
+    env:
+      VLLM_USE_V1: "1"
+    args:
+      - --max-model-len=2048
+      - --max-num-batched-token=2048
+      - --max-num-seqs=8
+    resourceProfile: nvidia-gpu
+
+
+  # Qwen vllm #
+  qwen2.5-coder-1.5b-vllm-gpu:
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "hf://Qwen/Qwen2.5-Coder-1.5B-Instruct"
+    engine: VLLM
+    env:
+      VLLM_ATTENTION_BACKEND: FLASHINFER
+    args:
+      - --max-model-len=2048
+      - --max-num-seqs=16
+      - --quantization=fp8
+      - --kv-cache-dtype=fp8
+    resourceProfile: nvidia-gpu
+  qwen3-1.7b-vllm-gpu:
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "hf://Qwen/Qwen3-1.7B"
+    engine: VLLM
+    env:
+    args:
+      - --max-model-len=2048
+      #- --enable-reasoning
+      #- --reasoning-parser=deepseek_r1
+    resourceProfile: nvidia-gpu
+
+
+###############################################################################

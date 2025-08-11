@@ -12,7 +12,7 @@ kubeai 헬름차트를 참고하여 작성한 헬름차트 입니다.
 ### Install `easykubeai` Helm Chart
 Edit easykubeai Value and Helm Install. Refer to `values_easykubeai.yaml`
 ```sh
-helm upgrade -i easy easykubeai-0.1.0.tgz -f values_easykubeai.yaml -n easy
+helm upgrade -i easy easykubeai -f values_easykubeai.yaml -n easy
 ```
 
 

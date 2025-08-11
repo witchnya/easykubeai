@@ -13,9 +13,24 @@ ingress:
 # -- OpenAI base API URL to use. Defaults to the Pipelines service endpoint when Pipelines are enabled, and "https://api.openai.com/v1" if Pipelines are not enabled and this value is blank
 openaiBaseApiUrl: ""
 openaiBaseApiUrls:
+# ollama cpu
+# - "http://model-deepseek-r1-1-5b-ollama-cpu:80/v1"
 - "http://model-gemma3-1b-ollama-cpu:80/v1"
+# - "http://model-qwen2-5-coder-1-5b-ollama-cpu:80/v1"
+# - "http://model-qwen3-1-7b-ollama-cpu:80/v1"
+# ollama gpu
+# - "http://model-deepseek-r1-1-5b-ollama-gpu:80/v1"
+# - "http://model-deepseek-r1-distill-qwen-7b-ollama-gpu:80/v1"
 - "http://model-gemma3-1b-ollama-gpu:80/v1"
+# - "http://model-gemma3-4b-ollama-gpu:80/v1"
+# - "http://omdel-qwen3-1-7b-ollama-gpu:80/v1"
+# - "http://model-qwen3-4b-ollama-gpu:80/v1"
+# - "http://model-llama3-1-8b-ollama-gpu:80/v1"
+# vllm gpu 
 - "http://model-deepseek-r1-distill-qwen-1-5b-vllm-gpu:80/v1"
+- "http://model-qwen2-5-coder-1-5b-vllm-gpu:80/v1"
+- "http://model-qwen3-1-7b-vllm-gpu:80/v1"
+- "http://model-qwen3-4b-instruct-2507-vllm-gpu:80/v1"
 
 extraEnvVars:
 - name: WEBUI_AUTH

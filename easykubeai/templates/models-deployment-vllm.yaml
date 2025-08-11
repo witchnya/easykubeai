@@ -34,72 +34,38 @@ spec:
       {{- end }}
 
       initContainers:
-        - name: ollama-init
-          image: {{ $.Values.modelServers.OLlama.images.default }}
-          imagePullPolicy: "Always"
-          env:
-          - name: OLLAMA_MODELS
-            value: /model
-          command:
-          - /bin/sh
-          - -c
-          - |
-            /bin/ollama serve &
-            echo "Waiting for Ollama server to start..."
-            sleep 10
-            
-            # Pull the model and ensure it downloads successfully
-            echo "Pulling model ..."
-            if ! /bin/ollama pull {{ $modelName }}; then
-                echo "Failed to pull model"
-                exit 1
-            fi
-            
-            # Verify the model files exist
-            echo "Verifying model files..."
-            ls -R /model
-            if [ ! -d "/model/blobs" ] || [ ! -d "/model/manifests" ]; then
-                echo "Model directories not found"
-                exit 1
-            fi
-            
-            echo "Model setup completed successfully"
-            ls -la /model/manifests/registry.ollama.ai/library/
+      - name: vllm-init
+        image: {{ $.Values.modelServers.VLLM.images.default }}
+        imagePullPolicy: "Always"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "init"
+          if [ -n "$HF_TOKEN" ]; then
+            echo "huggingface-cli login"
+            huggingface-cli login --token "$HF_TOKEN"
+          fi
+          echo "huggingface-cli download {{ $modelName }} "
+          huggingface-cli download {{ $modelName }} 
+        env:
+        - name: HF_HOME
+          value: "/root/.cache/huggingface"
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: token
+              name: {{ $.Values.secrets.huggingface.name | default "secret-hf" }}
+              optional: true
 
-          resources:
-            limits:
-              cpu: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.cpu }}
-              memory: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.memory }}  
-              
-          volumeMounts:
-          - name: models-volume
-            mountPath: /model
+        resources:
+          limits:
+            cpu: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.cpu }}
+            memory: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.memory }}
 
-
-      initContainers:
-        - name: vllm-init
-          image: {{ $.Values.modelServers.VLLM.images.default }}
-          imagePullPolicy: "Always"
-          env:
-          - name: VLLM_MODELS
-            value: /model
-          - name: HF_HOME
-            value: "/model/.cache/huggingface"
-          command:
-          - /bin/sh
-          - -c
-          - |
-            echo "init"
-            huggingface-cli download {{ $modelName }} --local-dir /model 
-
-          resources:
-            limits:
-              cpu: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.cpu }}
-              memory: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.memory }}  
-              
-          volumeMounts:
-          - name: models-volume
-            mountPath: /model
+        volumeMounts:
+        - name: models-volume
+          mountPath: /root/.cache/huggingface
 
       containers:
       - name: vllm-server
@@ -121,7 +87,7 @@ spec:
           value: {{ $v | quote }}
         {{- end }}
         - name: HF_HOME
-          value: "/model/.cache/huggingface"
+          value: "/root/.cache/huggingface"
         - name: HF_TOKEN
           valueFrom:
             secretKeyRef:
@@ -185,7 +151,7 @@ spec:
         - mountPath: /dev/shm
           name: dshm
         - name: models-volume
-          mountPath: /model
+          mountPath: /root/.cache/huggingface
 
       terminationGracePeriodSeconds: 30
 
