@@ -59,15 +59,6 @@ catalog:
   "gemma3-1b-ollama-gpu":
     enabled: false
 
-  "deepseek-r1-distill-qwen-1.5b-vllm-gpu":
-    enabled: false
-
-  "qwen2.5-coder-1.5b-vllm-gpu":
-    enabled: false
-
-  "qwen3-1.7b-vllm-gpu":
-    enabled: false
-
   "gemma3-1b-it-vllm-gpu":
     enabled: false
 
