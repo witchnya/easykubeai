@@ -4,12 +4,12 @@ imagePullSecrets:
 
 ###############################################################################
 modelCache:
-  persistence:
+  mode: "host" # "host" or "pvc"
+  host:
+    hostPath: "/mnt/c/_DEV/model" #"/mnt/c/some/path/for/model"
+  pvc:
     storageClassName: "local-path"
     size: "10Gi"
-    accessModes:
-      - "ReadWriteOnce"
-      #- "ReadWriteMany"
     annotations:
       "helm.sh/resource-policy": "keep"
       "kubernetes.io/pvc-protection": "true"
@@ -18,7 +18,7 @@ modelCache:
 ###############################################################################
 secrets:
   huggingface:
-    create: false
+    create: true
     token: ""
 
 
@@ -66,22 +66,23 @@ resourceProfiles:
 ###############################################################################
 catalog:
 
-  gemma3-1b-ollama-cpu:
-    enabled: false
-
-  gemma3-1b-ollama-gpu:
-    enabled: false
-
-  deepseek-r1-distill-qwen-1.5b-vllm-gpu:
-    enabled: false
-
-  qwen2.5-coder-1.5b-vllm-gpu:
-    enabled: false
-
-  qwen3-1.7b-vllm-gpu:
+  "gemma3-1b-ollama-cpu":
     enabled: true
 
-  qwen3-4b-instruct-2507-vllm-gpu:
+  "gemma3-1b-ollama-gpu":
     enabled: false
+
+  "deepseek-r1-distill-qwen-1.5b-vllm-gpu":
+    enabled: false
+
+  "qwen2.5-coder-1.5b-vllm-gpu":
+    enabled: false
+
+  "qwen3-1.7b-vllm-gpu":
+    enabled: false
+
+  "gemma3-1b-it-vllm-gpu":
+    enabled: false
+
 
 ###############################################################################

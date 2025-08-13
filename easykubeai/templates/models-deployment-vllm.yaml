@@ -1,27 +1,33 @@
-{{- range $svcName, $model := .Values.catalog }}
+{{- range $serveName, $model := .Values.catalog }}
   {{- if $model.enabled }}
   {{- if eq $model.engine "VLLM" }}
     {{- $modelName := (trimPrefix "hf://" $model.url) }}
+    {{- $rpName := $model.resourceProfile | default "cpu" }}
+    {{- $rp := index $.Values.resourceProfiles $rpName }}
+    {{- $rcn := get $rp "runtimeClassName" }}
+    {{- $mountPath := "/root/.cache/huggingface" }}
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: model-deploy-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $svcName) "-" }}
+  name: model-deploy-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $serveName) "-" }}
   labels:
-    app: model-{{ $svcName }}
+    app: model-{{ $serveName }}
     model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
+  annotations:
+    resourceProfile: {{ $rpName }}
 spec:
   replicas: {{ $model.replicas | default 1 }}
 
   selector:
     matchLabels:
-      app: model-{{ $svcName }}
+      app: model-{{ $serveName }}
       model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
   template:
     metadata:
       labels:
-        app: model-{{ $svcName }}
+        app: model-{{ $serveName }}
         model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
     spec:
       {{- with $.Values.imagePullSecrets }}
@@ -29,25 +35,14 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 
-      {{- with (index $.Values.resourceProfiles $model.resourceProfile).runtimeClassName }}
+      {{- with $rcn }}
       runtimeClassName: {{ . }}
       {{- end }}
 
       initContainers:
       - name: vllm-init
         image: {{ $.Values.modelServers.VLLM.images.default }}
-        imagePullPolicy: "Always"
-        command:
-        - /bin/sh
-        - -c
-        - |
-          echo "init"
-          if [ -n "$HF_TOKEN" ]; then
-            echo "huggingface-cli login"
-            huggingface-cli login --token "$HF_TOKEN"
-          fi
-          echo "huggingface-cli download {{ $modelName }} "
-          huggingface-cli download {{ $modelName }} 
+        imagePullPolicy: "IfNotPresent"
         env:
         - name: HF_HOME
           value: "/root/.cache/huggingface"
@@ -57,35 +52,41 @@ spec:
               key: token
               name: {{ $.Values.secrets.huggingface.name | default "secret-hf" }}
               optional: true
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "# init"
+          
+          if [ -n "$HF_TOKEN" ]; then
+            echo "# huggingface-cli login"
+            huggingface-cli login --token "$HF_TOKEN"
+          fi
+          echo "# huggingface-cli download {{ $modelName }} "
+          huggingface-cli download {{ $modelName }} 
+
+          set -x
+          nvidia-smi
 
         resources:
           limits:
-            cpu: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.cpu }}
-            memory: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.memory }}
+            cpu: {{ ($rp).limits.cpu }}
+            memory: {{ ($rp).limits.memory }}  
 
         volumeMounts:
+        {{- if eq $.Values.modelCache.mode "pvc" }}
         - name: models-volume
-          mountPath: /root/.cache/huggingface
+          mountPath: {{ $mountPath }}
+        {{- else if eq $.Values.modelCache.mode "host" }}
+        - name: host-path
+          mountPath: {{ $mountPath }}
+        {{- end }}
 
       containers:
       - name: vllm-server
         image: {{ $.Values.modelServers.VLLM.images.default }}
         imagePullPolicy: "IfNotPresent"
-        command:
-        - python3
-        - -m
-        - vllm.entrypoints.openai.api_server
-        args:
-        - --model={{ $modelName }}
-        - --served-model-name={{ regexReplaceAll "[^a-zA-Z0-9-]" $svcName "-" }}
-        {{- with $model.args }}
-        {{- . | toYaml | nindent 8 }}
-        {{- end }}
         env:
-        {{- range $k, $v := $model.env }}
-        - name:  {{ $k }}
-          value: {{ $v | quote }}
-        {{- end }}
         - name: HF_HOME
           value: "/root/.cache/huggingface"
         - name: HF_TOKEN
@@ -94,7 +95,21 @@ spec:
               key: token
               name: kubeai-huggingface
               optional: true
+        {{- range $k, $v := $model.env }}
+        - name:  {{ $k }}
+          value: {{ $v | quote }}
+        {{- end }}
 
+        command:
+        - python3
+        - -m
+        - vllm.entrypoints.openai.api_server
+        args:
+        - --model={{ $modelName }}
+        - --served-model-name={{ regexReplaceAll "[^a-zA-Z0-9-]" $serveName "-" }}
+        {{- with $model.args }}
+        {{- . | toYaml | nindent 8 }}
+        {{- end }}
         livenessProbe:
           failureThreshold: 3
           httpGet:
@@ -123,11 +138,11 @@ spec:
           # 예시) cpu2 이면, .Values.resourceProfiles 에서 cpu2 의 requests, limits 를 가져옴
           # 예시) nvidia-gpu 이면, .Values.resourceProfiles 에서 nvidia-gpu 의 requests, limits 를 가져옴 
           requests:
-            cpu: {{ (index $.Values.resourceProfiles $model.resourceProfile).requests.cpu }}
-            memory: {{ (index $.Values.resourceProfiles $model.resourceProfile).requests.memory }}  
+            cpu: {{ ($rp).requests.cpu }}
+            memory: {{ ($rp).requests.memory }}  
           limits:
-            cpu: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.cpu }}
-            memory: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.memory }}  
+            cpu: {{ ($rp).limits.cpu }}
+            memory: {{ ($rp).limits.memory }}  
 
         securityContext:
           allowPrivilegeEscalation: false
@@ -148,10 +163,15 @@ spec:
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         volumeMounts:
-        - mountPath: /dev/shm
-          name: dshm
+        - name: dshm
+          mountPath: /dev/shm
+        {{- if eq $.Values.modelCache.mode "pvc" }}
         - name: models-volume
-          mountPath: /root/.cache/huggingface
+          mountPath: {{ $mountPath }}
+        {{- else if eq $.Values.modelCache.mode "host" }}
+        - name: host-path
+          mountPath: {{ $mountPath }}
+        {{- end }}
 
       terminationGracePeriodSeconds: 30
 
@@ -159,10 +179,17 @@ spec:
       - name: dshm
         emptyDir:
           medium: Memory
+      {{- if eq $.Values.modelCache.mode "pvc" }}
       - name: models-volume
         persistentVolumeClaim:
           claimName: model-pvc-vllm-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $modelName) "-" }}
-
+      {{- else if eq $.Values.modelCache.mode "host" }}
+      - name: host-path
+        hostPath: 
+          path: {{ $.Values.modelCache.host.hostPath }}
+          type: Directory
+      {{- end }}
+          
       {{- with $model.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

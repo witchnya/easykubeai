@@ -10,9 +10,9 @@ easykubeai
 {{- range $svcName, $model := .Values.catalog }}
 {{- if $model.enabled }}
 {{- if eq $model.engine "OLlama" }}
-  - http://model-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $svcName) "-" }}.{{ $.Release.Namespace }}:{{ $.Values.modelCache.service.port }}/v1
+  - http://model-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $svcName) "-" }}.{{ $.Release.Namespace }}:{{ $.Values.service.port }}/v1
 {{- else if eq $model.engine "VLLM" }}
-  - http://model-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $svcName) "-" }}.{{ $.Release.Namespace }}:{{ $.Values.modelCache.service.port }}/v1
+  - http://model-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $svcName) "-" }}.{{ $.Release.Namespace }}:{{ $.Values.service.port }}/v1
 {{- end }}
 {{- end }}
 {{- end }}

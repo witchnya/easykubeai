@@ -1,27 +1,33 @@
-{{- range $svcName, $model := .Values.catalog }}
+{{- range $serveName, $model := .Values.catalog }}
   {{- if $model.enabled }}
   {{- if eq $model.engine "OLlama" }}
     {{- $modelName := (trimPrefix "ollama://" $model.url) }}
+    {{- $rpName := $model.resourceProfile | default "cpu" }}
+    {{- $rp := index $.Values.resourceProfiles $rpName }}
+    {{- $rcn := get $rp "runtimeClassName" }}
+    {{- $mountPath := "/model" }}
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: model-deploy-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $svcName) "-" }}
+  name: model-deploy-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $serveName) "-" }}
   labels:
-    app: model-{{ $svcName }}
+    app: model-{{ $serveName }}
     model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
+  annotations:
+    resourceProfile: {{ $rpName }}
 spec:
   replicas: {{ $model.replicas | default 1 }}
 
   selector:
     matchLabels:
-      app: model-{{ $svcName }}
+      app: model-{{ $serveName }}
       model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
   template:
     metadata:
       labels:
-        app: model-{{ $svcName }}
+        app: model-{{ $serveName }}
         model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
     spec:
       {{- with $.Values.imagePullSecrets }}
@@ -29,51 +35,59 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 
-      {{- with (index $.Values.resourceProfiles $model.resourceProfile).runtimeClassName }}
+      {{- with $rcn }}
       runtimeClassName: {{ . }}
       {{- end }}
 
       initContainers:
-        - name: ollama-init
-          image: {{ $.Values.modelServers.OLlama.images.default }}
-          imagePullPolicy: "Always"
-          env:
-          - name: OLLAMA_MODELS
-            value: /model
-          command:
-          - /bin/sh
-          - -c
-          - |
-            /bin/ollama serve &
-            echo "Waiting for Ollama server to start..."
-            sleep 10
-            
-            # Pull the model and ensure it downloads successfully
-            echo "Pulling model ..."
-            if ! /bin/ollama pull {{ $modelName }}; then
-                echo "Failed to pull model"
-                exit 1
-            fi
-            
-            # Verify the model files exist
-            echo "Verifying model files..."
-            ls -R /model
-            if [ ! -d "/model/blobs" ] || [ ! -d "/model/manifests" ]; then
-                echo "Model directories not found"
-                exit 1
-            fi
-            
-            echo "Model setup completed successfully"
-            ls -la /model/manifests/registry.ollama.ai/library/
+      - name: ollama-init
+        image: {{ $.Values.modelServers.OLlama.images.default }}
+        imagePullPolicy: "Always"
+        env:
+        - name: OLLAMA_MODELS
+          value: /model
+        command:
+        - /bin/sh
+        - -c
+        - |
+          /bin/ollama serve &
+          echo "# Waiting for Ollama server to start..."
+          sleep 10
 
-          resources:
-            limits:
-              cpu: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.cpu }}
-              memory: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.memory }}  
-              
-          volumeMounts:
-          - name: models-volume
-            mountPath: /model
+          # Pull the model and ensure it downloads successfully
+          echo "# Pulling model ..."
+          if ! /bin/ollama pull {{ $modelName }}; then
+              echo "Failed to pull model"
+              exit 1
+          fi
+          
+          # Verify the model files exist
+          echo "# Verifying model files..."
+          ls -R /model
+          if [ ! -d "/model/blobs" ] || [ ! -d "/model/manifests" ]; then
+              echo "Model directories not found"
+              exit 1
+          fi
+          
+          echo "# Model setup completed successfully"
+          ls -la /model/manifests/registry.ollama.ai/library/
+
+          set -x
+          nvidia-smi
+
+        resources:
+          limits:
+            cpu: {{ ($rp).limits.cpu }}
+            memory: {{ ($rp).limits.memory }}  
+            
+        volumeMounts:
+        {{- if eq $.Values.modelCache.mode "pvc" }}
+        - name: models-volume
+          mountPath: {{ $mountPath }}
+        {{- else if eq $.Values.modelCache.mode "host" }}
+        - name: host-path
+          mountPath: {{ $mountPath }}
+        {{- end }}
 
       containers:
       - name: ollama-server
@@ -115,11 +129,11 @@ spec:
           # 예시) cpu2 이면, .Values.resourceProfiles 에서 cpu2 의 requests, limits 를 가져옴
           # 예시) nvidia-gpu 이면, .Values.resourceProfiles 에서 nvidia-gpu 의 requests, limits 를 가져옴 
           requests:
-            cpu: {{ (index $.Values.resourceProfiles $model.resourceProfile).requests.cpu }}
-            memory: {{ (index $.Values.resourceProfiles $model.resourceProfile).requests.memory }}  
+            cpu: {{ ($rp).requests.cpu }}
+            memory: {{ ($rp).requests.memory }}  
           limits:
-            cpu: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.cpu }}
-            memory: {{ (index $.Values.resourceProfiles $model.resourceProfile).limits.memory }}  
+            cpu: {{ ($rp).limits.cpu }}
+            memory: {{ ($rp).limits.memory }}  
 
         securityContext:
           allowPrivilegeEscalation: false
@@ -133,7 +147,7 @@ spec:
             command:
             - bash
             - -c
-            - /bin/ollama pull {{ $modelName }} && /bin/ollama cp {{ $modelName }} {{ $svcName }} && /bin/ollama run {{ $svcName }} hi
+            - /bin/ollama pull {{ $modelName }} && /bin/ollama cp {{ $modelName }} {{ $serveName }} && /bin/ollama run {{ $serveName }} hi
           failureThreshold: 10
           initialDelaySeconds: 1
           periodSeconds: 3
@@ -142,10 +156,15 @@ spec:
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         volumeMounts:
-        - mountPath: /dev/shm
-          name: dshm
+        - name: dshm
+          mountPath: /dev/shm
+        {{- if eq $.Values.modelCache.mode "pvc" }}
         - name: models-volume
-          mountPath: /model
+          mountPath: {{ $mountPath }}
+        {{- else if eq $.Values.modelCache.mode "host" }}
+        - name: host-path
+          mountPath: {{ $mountPath }}
+        {{- end }}
 
       terminationGracePeriodSeconds: 30
 
@@ -153,10 +172,17 @@ spec:
       - name: dshm
         emptyDir:
           medium: Memory
+      {{- if eq $.Values.modelCache.mode "pvc" }}
       - name: models-volume
         persistentVolumeClaim:
           claimName: model-pvc-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $modelName) "-" }}
-
+      {{- else if eq $.Values.modelCache.mode "host" }}
+      - name: host-path
+        hostPath: 
+          path: {{ $.Values.modelCache.host.hostPath }}
+          type: Directory
+      {{- end }}
+      
      {{- with $model.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

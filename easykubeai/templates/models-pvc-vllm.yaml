@@ -2,7 +2,7 @@
 
 {{- range $svcName, $model := .Values.catalog}}
   {{- if $model.enabled }}
-  {{- if $.Values.modelCache.persistence.enabled }}
+  {{- if eq $.Values.modelCache.mode "pvc" }}
   {{- if eq $model.engine "VLLM" }}
     {{- $modelName := (trimPrefix "hf://" $model.url) }}
 
@@ -27,19 +27,19 @@ metadata:
   labels:
     model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
 
-  {{- with $.Values.modelCache.persistence.annotations }}
+  {{- with $.Values.modelCache.pvc.annotations }}
   annotations:
     {{- toYaml . | nindent 8 }}
   {{- end }}
 
 spec:
   accessModes:
-    {{- range $.Values.modelCache.persistence.accessModes }}
+    {{- range $.Values.modelCache.pvc.accessModes }}
     - {{ . | quote }}
     {{- end }}
   resources:
     requests:
-      storage: {{ $.Values.modelCache.persistence.size | default "10Gi" }}
-  storageClassName: {{ $.Values.modelCache.persistence.storageClassName | default "" }}
+      storage: {{ $.Values.modelCache.pvc.size | default "10Gi" }}
+  storageClassName: {{ $.Values.modelCache.pvc.storageClassName | default "" }}
 
 {{- end }}

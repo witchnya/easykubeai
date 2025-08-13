@@ -31,6 +31,7 @@ openaiBaseApiUrls:
 - "http://model-qwen2-5-coder-1-5b-vllm-gpu:80/v1"
 - "http://model-qwen3-1-7b-vllm-gpu:80/v1"
 - "http://model-qwen3-4b-instruct-2507-vllm-gpu:80/v1"
+- "http://model-gemma3-1b-it-vllm-gpu:80/v1"
 
 extraEnvVars:
 - name: WEBUI_AUTH
