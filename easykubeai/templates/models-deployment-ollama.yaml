@@ -13,8 +13,8 @@ kind: Deployment
 metadata:
   name: model-deploy-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $serveName) "-" }}
   labels:
-    app: model-{{ $serveName }}
-    model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
+    app: "model-{{ $serveName }}"
+    model: "{{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}"
   annotations:
     resourceProfile: {{ $rpName }}
 spec:
@@ -22,13 +22,13 @@ spec:
 
   selector:
     matchLabels:
-      app: model-{{ $serveName }}
-      model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
+      app: "model-{{ $serveName }}"
+      model: "{{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}"
   template:
     metadata:
       labels:
-        app: model-{{ $serveName }}
-        model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
+        app: "model-{{ $serveName }}"
+        model: "{{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}"
     spec:
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:

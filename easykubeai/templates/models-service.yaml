@@ -1,19 +1,22 @@
-{{- range $svcName, $model := .Values.catalog }}
+{{- range $serveName, $model := .Values.catalog }}
   {{- if $model.enabled }}
     {{- $modelName := "" }}
     {{- if eq $model.engine "OLlama" }}
-      {{- $modelName := (trimPrefix "ollama://" $model.url) }}
+      {{- $_ := set $ "modelName" (trimPrefix "ollama://" $model.url) }}
     {{- else if eq $model.engine "VLLM" }}
-      {{- $modelName := (trimPrefix "hf://" $model.url) }}
-    {{- end -}}
+      {{- $_ := set $ "modelName" (trimPrefix "hf://" $model.url) }}
+    {{- else }}
+      {{- $_ := set $ "modelName" "" }}
+    {{- end }}
+    {{- $modelName := $.modelName }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: model-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $svcName) "-" }}
+  name: model-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $serveName) "-" }}
   labels:
-    app: model-{{ $svcName }}
-    model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
+    app: "model-{{ $serveName }}"
+    model: "{{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}"
 
   {{- with $.Values.service.annotations }}
   annotations:
@@ -28,8 +31,8 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: model-{{ $svcName }}
-    model: {{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}
+    app: "model-{{ $serveName }}"
+    model: "{{ regexReplaceAll "[^a-zA-Z0-9-.]" $modelName "-" }}"
 
   {{- end }}
 {{- end }}
