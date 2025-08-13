@@ -4,7 +4,7 @@ imagePullSecrets:
 
 ###############################################################################
 modelCache:
-  mode: "host" # "host" or "pvc"
+  mode: "pvc" # "host" or "pvc"
   host:
     hostPath: "/mnt/c/_DEV/model" #"/mnt/c/some/path/for/model"
   pvc:
