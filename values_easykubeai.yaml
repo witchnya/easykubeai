@@ -1,12 +1,9 @@
-imagePullSecrets:
-  #- name: my-registry-secret
-
 
 ###############################################################################
 modelCache:
   mode: "pvc" # "host" or "pvc"
   host:
-    hostPath: "/mnt/c/_DEV/model" #"/mnt/c/some/path/for/model"
+    hostPath: "/mnt/c/model" #"/mnt/c/some/path/for/model"
   pvc:
     storageClassName: "local-path"
     size: "10Gi"
@@ -23,16 +20,6 @@ secrets:
 
 
 ###############################################################################
-modelServers:
-  VLLM:
-    images:
-      default: "vllm/vllm-openai:v0.8.3"
-  OLlama:
-    images:
-      default: "ollama/ollama:latest"
-
-
-###############################################################################
 resourceProfiles:
   cpu:
     # requests:
@@ -46,12 +33,12 @@ resourceProfiles:
     # runtimeClassName: "nvidia"
     # requests:
     #   nvidia.com/gpu: "1"
-    #   cpu: 1
-    #   memory: "6Gi"
+    #   cpu: 2
+    #   memory: "4Gi"
     # limits:
     #   nvidia.com/gpu: "1"
-    #   cpu: 2
-    #   memory: "12Gi"
+    #   cpu: 4
+    #   memory: "8Gi"
     # tolerations:
     #   - key: "nvidia.com/gpu"
     #     operator: "Equal"
