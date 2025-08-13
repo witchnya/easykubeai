@@ -23,10 +23,10 @@ openaiBaseApiUrls:
 # - "http://model-deepseek-r1-distill-qwen-7b-ollama-gpu:80/v1"
 - "http://model-gemma3-1b-ollama-gpu:80/v1"
 - "http://model-gemma3-4b-ollama-gpu:80/v1"
-- "http://model-gemma3n-e2b-ollama-gpu:80/v1"
 # - "http://omdel-qwen3-1-7b-ollama-gpu:80/v1"
 # - "http://model-qwen3-4b-ollama-gpu:80/v1"
 # - "http://model-llama3-1-8b-ollama-gpu:80/v1"
+# - "http://model-llama3-2-3b-ollama-gpu:80/v1"
 # vllm gpu 
 - "http://model-deepseek-r1-distill-qwen-1-5b-vllm-gpu:80/v1"
 - "http://model-qwen2-5-coder-1-5b-vllm-gpu:80/v1"

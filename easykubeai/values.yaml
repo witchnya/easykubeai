@@ -44,7 +44,7 @@ modelServers:
 resourceProfiles:
   cpu:
     requests:
-      cpu: 2
+      cpu: 4
       # TODO: Consider making this a ratio that is more common on cloud machines
       # such as 1:4 CPU:Mem. NOTE: This might need to be adjusted for local clusters.
       memory: "8Gi"
@@ -60,11 +60,11 @@ resourceProfiles:
     runtimeClassName: "nvidia"
     requests:
       nvidia.com/gpu: "1"
-      cpu: 2
+      cpu: 4
       memory: "4Gi"
     limits:
       nvidia.com/gpu: "1"
-      cpu: 4
+      cpu: 8
       memory: "8Gi"
     # tolerations:
     #   - key: "nvidia.com/gpu"
@@ -213,6 +213,13 @@ catalog:
     features: [ "TextGeneration" ]
     url: "ollama://llama3.2:1b"
     modelSize: 1.3Gi
+    engine: OLlama
+    resourceProfile: nvidiaGpu
+  "llama3.2-3b-ollama-gpu":
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "ollama://llama3.2:3b"
+    modelSize: 2.0Gi
     engine: OLlama
     resourceProfile: nvidiaGpu
 
