@@ -1,6 +1,36 @@
 imagePullSecrets:
 #- name: my-registry-secret
 
+###############################################################################
+
+ui:
+  enabled: true
+  image: "python:3.13-slim-bookworm"
+  replicas: 1
+  resources: {}
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+  pvc:
+    storageClassName: ""
+    size: "5Gi"
+    accessModes:
+      - "ReadWriteOnce"
+      #- "ReadWriteMany"
+    annotations:
+      "helm.sh/resource-policy": "keep"
+      "kubernetes.io/pvc-protection": "true"
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+  tls: []
+  hosts:
+    - host: easykubeai.local
+      paths:
+      - path: /
+        pathType: Prefix
 
 ###############################################################################
 modelCache:
@@ -8,7 +38,7 @@ modelCache:
   host:
     hostPath: "/mnt/c/some/path/for/model" #"/mnt/c/some/path/for/model"
   pvc:
-    storageClassName: "default"
+    storageClassName: ""
     size: "10Gi"
     accessModes:
       - "ReadWriteOnce"

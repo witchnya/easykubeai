@@ -40,6 +40,6 @@ spec:
   resources:
     requests:
       storage: {{ $.Values.modelCache.pvc.size | default "10Gi" }}
-  storageClassName: {{ $.Values.modelCache.pvc.storageClassName | default "" }}
+  storageClassName: {{ $.Values.modelCache.pvc.storageClassName }}
 
 {{- end }}

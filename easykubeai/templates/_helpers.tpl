@@ -72,81 +72,40 @@ Create the name of the service account to use for model pods
 {{- end }}
 {{- end }}
 
-{{/*
-Create the name of the alibaba secret to use
-*/}}
-{{- define "easykubeai.alibabaSecretName" -}}
-{{- if .Values.secrets.alibaba.create -}}
-{{- if .Values.secrets.alibaba.name -}}
-{{- .Values.secrets.alibaba.name -}}
-{{- else }}
-{{- (include "easykubeai.fullname" .)}}-alibaba
-{{- end}}
-{{- else }}
-{{- if not .Values.secrets.alibaba.name -}}
-{{ fail "if secrets.alibaba.create is false, secrets.alibaba.name is required" }}
-{{- end }}
-{{- .Values.secrets.alibaba.name }}
-{{- end }}
-{{- end }}
 
-{{/*
-Create the name of the aws secret to use
-*/}}
-{{- define "easykubeai.awsSecretName" -}}
-{{- if .Values.secrets.aws.create -}}
-{{- if .Values.secrets.aws.name -}}
-{{- .Values.secrets.aws.name -}}
-{{- else }}
-{{- (include "easykubeai.fullname" .)}}-aws
-{{- end}}
-{{- else }}
-{{- if not .Values.secrets.aws.name -}}
-{{ fail "if secrets.aws.create is false, secrets.aws.name is required" }}
+{{/* comma list */}}
+{{- define "apiBaseList" }}
+{{- $list := list }}
+{{- range $serveName, $model := .Values.catalog }}
+  {{- if not $model }}
+  {{- else if $model.enabled }}
+    {{- $port := int $.Values.service.port }}
+    {{- if eq $model.engine "OLlama" }}
+      {{- $list = append $list (printf "http://model-%s.%s:%d/v1" (regexReplaceAll "[^a-zA-Z0-9-]" (lower $serveName) "-") $.Release.Namespace $port) }}
+    {{- else if eq $model.engine "VLLM" }}
+      {{- $list = append $list (printf "http://model-%s.%s:%d/v1" (regexReplaceAll "[^a-zA-Z0-9-]" (lower $serveName) "-") $.Release.Namespace $port) }}
+    {{- end }}
+  {{- end }}
 {{- end }}
-{{- .Values.secrets.aws.name }}
-{{- end }}
-{{- end }}
+{{- join ", " $list -}}
+{{- end -}}
 
-{{/*
-Create the name of the gcp secret to use
-*/}}
-{{- define "easykubeai.gcpSecretName" -}}
-{{- if .Values.secrets.gcp.create -}}
-{{- if .Values.secrets.gcp.name -}}
-{{- .Values.secrets.gcp.name -}}
-{{- else }}
-{{- (include "easykubeai.fullname" .)}}-gcp
-{{- end}}
-{{- else }}
-{{- if not .Values.secrets.gcp.name -}}
-{{ fail "if secrets.gcp.create is false, secrets.gcp.name is required" }}
-{{- end }}
-{{- .Values.secrets.gcp.name }}
-{{- end }}
-{{- end }}
 
-{{/*
-Create the name of the huggingface secret to use
-*/}}
-{{- define "easykubeai.huggingfaceSecretName" -}}
-{{- if .Values.secrets.huggingface.create -}}
-{{- if .Values.secrets.huggingface.name -}}
-{{- .Values.secrets.huggingface.name -}}
-{{- else }}
-{{- (include "easykubeai.fullname" .)}}-huggingface
-{{- end}}
-{{- else }}
-{{- if not .Values.secrets.huggingface.name -}}
-{{ fail "if secrets.huggingface.create is false, secrets.huggingface.name is required" }}
+{{/* print list */}}
+{{- define "apiBaseListPrint" }}
+{{- $list := list }}
+{{- range $serveName, $model := .Values.catalog }}
+  {{- if not $model }}
+  {{- else if $model.enabled }}
+    {{- $port := int $.Values.service.port }}
+    {{- if eq $model.engine "OLlama" }}
+      {{- $list = append $list (printf "http://model-%s.%s:%d/v1" (regexReplaceAll "[^a-zA-Z0-9-]" (lower $serveName) "-") $.Release.Namespace $port) }}
+    {{- else if eq $model.engine "VLLM" }}
+      {{- $list = append $list (printf "http://model-%s.%s:%d/v1" (regexReplaceAll "[^a-zA-Z0-9-]" (lower $serveName) "-") $.Release.Namespace $port) }}
+    {{- end }}
+  {{- end }}
 {{- end }}
-{{- .Values.secrets.huggingface.name }}
-{{- end }}
-{{- end }}
-
-{{/*
-Set the name of the configmap to use for storing model autoscaling state
-*/}}
-{{- define "models.autoscalerStateConfigMapName" -}}
-{{- default (printf "%s-autoscaler-state" (include "easykubeai.fullname" .)) .Values.modelAutoscaling.stateConfigMapName }}
-{{- end }}
+{{- range $item := $list -}}
+{{- printf "- %s \n" $item -}}
+{{- end -}}
+{{- end -}}

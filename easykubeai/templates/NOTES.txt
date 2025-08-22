@@ -7,16 +7,6 @@ easykubeai
   - Namespace: {{ .Release.Namespace }}
 
 2. OpenAI Compatiable Service Endpoint:
-{{- range $serveName, $model := .Values.catalog }}
-  {{- if not $model }}
-  - INVALID CATALOG NAME : {{ $serveName }}
-  {{- else if $model.enabled }}
-    {{- if eq $model.engine "OLlama" }}
-  - http://model-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $serveName) "-" }}.{{ $.Release.Namespace }}:{{ $.Values.service.port }}/v1
-    {{- else if eq $model.engine "VLLM" }}
-  - http://model-{{ regexReplaceAll "[^a-zA-Z0-9-]" (lower $serveName) "-" }}.{{ $.Release.Namespace }}:{{ $.Values.service.port }}/v1
-    {{- end }}
-  {{- end }}
-{{- end }}
+{{- include "apiBaseListPrint" . | nindent 2 }}
 
 ###############################################################################

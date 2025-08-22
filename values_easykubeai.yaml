@@ -1,4 +1,10 @@
 
+ui:
+  enabled: true
+  pvc:
+    storageClassName: "local-path"
+
+ 
 ###############################################################################
 modelCache:
   mode: "pvc" # "host" or "pvc"

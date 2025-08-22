@@ -1,0 +1,99 @@
+{{ if .Values.ui.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui-deploy
+  labels:
+    app: "ui-deploy"
+spec:
+  replicas: {{ .Values.ui.replicas | default 1 }}
+
+  selector:
+    matchLabels:
+      app: "ui-deploy"
+  template:
+    metadata:
+      labels:
+        app: "ui-deploy"
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      containers:
+      - name: ui-server
+        image: {{ .Values.ui.image }}
+        imagePullPolicy: "IfNotPresent"
+        env:
+        - name: API_BASE
+          value: ""
+        - name: API_BASE_LIST
+          value: "{{ include "apiBaseList" . }}"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "# init"
+          
+          mkdir -p /appdata
+          cd /appdata
+
+          export PIP_CACHE_DIR=/appdata/.venv/pipcache
+          python -m venv .venv
+          sh /appdata/.venv/bin/activate
+
+          pip cache dir
+          pip cache info 
+          pip cache list
+
+          pip install -r /app/requirements.txt 
+
+          echo "# start"
+
+          cd /app
+          streamlit run streamlit_app.py --server.port 8501 --logger.level=debug 
+        
+        volumeMounts:
+        - name: cm-files-volume
+          mountPath: /app
+        - name: cm-files-pages-volume
+          mountPath: /app/pages
+        - name: pvc-appdata-volume
+          mountPath: /appdata
+
+        ports:
+        - containerPort: 8501
+          name: http
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.ui.resources | nindent 12 }}
+
+
+      terminationGracePeriodSeconds: 30
+
+      volumes:
+      - name: cm-files-volume
+        configMap:
+          name: ui-configmap-files
+      - name: cm-files-pages-volume
+        configMap:
+          name: ui-configmap-files-pages
+      - name: pvc-appdata-volume
+        persistentVolumeClaim:
+          claimName: ui-pvc
+
+      {{- with .Values.ui.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ui.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ui.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+{{ end }}

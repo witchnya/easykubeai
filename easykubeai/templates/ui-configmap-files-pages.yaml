@@ -1,0 +1,10 @@
+{{ if .Values.ui.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ui-configmap-files-pages
+data:
+  
+  {{- (.Files.Glob "files/app/pages*").AsConfig | nindent 2 }}
+
+{{ end }}
