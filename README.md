@@ -19,9 +19,9 @@ Install helm chart.
 helm upgrade -i easy easykubeai -f values_easykubeai.yaml -n easy
 ```
 
-## Test with embeded `streamlit`
+## Test with embeded `streamlit` UI
 If `ui.enabled` is true, you can see default streamlit ui.
-### Edit `hosts` and browse `open-webui`
+### Edit `hosts` and browse
 Add domain and IP `/etc/hosts` or `C:\Windows\System32\drivers\etc\hosts` File.
 ```
 xxx.xxx.xxx.xxx easykubeai.local
@@ -39,7 +39,7 @@ helm pull open-webui/open-webui --version 7.2.0
 helm upgrade -i open-webui open-webui-7.2.0.tgz -f values_open-webui.yaml -n easy
 ```
 
-### Edit `hosts` and browse `open-webui`
+### Edit `hosts` and browse
 Add domain and IP `/etc/hosts` or `C:\Windows\System32\drivers\etc\hosts` File.
 ```
 xxx.xxx.xxx.xxx open-webui.local
