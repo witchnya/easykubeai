@@ -27,9 +27,10 @@ spec:
         image: {{ .Values.ui.image }}
         imagePullPolicy: {{ default .Values.ui.imagePullPolicy "IfNotPresent" }}
         command:
-        - /bin/sh
+        - /bin/bash
         - -c
         - |
+
           echo "# init start"
   
           cd /appdata
@@ -38,16 +39,21 @@ spec:
             python -m venv .venv
           fi
           echo "# activating virtual environment"
-          sh /appdata/.venv/bin/activate
+          source /appdata/.venv/bin/activate
           
           echo "# downloading requirements"
           echo "===================================="
           cat /app/requirements.txt
-          echo "\n===================================="
+          echo ""
+          echo "===================================="
           mkdir -p /appdata/downloads
           pip download -r /app/requirements.txt -d /appdata/downloads 
 
+          echo "# installing requirements"
+          pip install -r /app/requirements.txt --no-index --find-links=/appdata/downloads
+
           echo "# init end"                  
+        
         volumeMounts:
         - name: cm-files-volume
           mountPath: /app
@@ -64,17 +70,14 @@ spec:
         - name: API_BASE_LIST
           value: "{{ include "apiBaseList" . }}"
         command:
-        - /bin/sh
+        - /bin/bash
         - -c
         - |
 
           echo "# activating virtual environment"
           cd /appdata
-          sh /appdata/.venv/bin/activate
+          source /appdata/.venv/bin/activate
 
-          echo "# installing requirements"
-          pip install --no-index --find-links=/appdata/downloads -r /app/requirements.txt
-          
           echo "# start"
 
           cd /app
