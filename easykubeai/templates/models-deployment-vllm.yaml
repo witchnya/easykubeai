@@ -42,7 +42,7 @@ spec:
       initContainers:
       - name: vllm-init
         image: {{ $.Values.modelServers.VLLM.images.default }}
-        imagePullPolicy: "IfNotPresent"
+        imagePullPolicy: {{ default $.Values.modelServers.OLlama.imagePullPolicy "IfNotPresent" }} 
         env:
         - name: HF_HOME
           value: "/root/.cache/huggingface"
@@ -85,7 +85,7 @@ spec:
       containers:
       - name: vllm-server
         image: {{ $.Values.modelServers.VLLM.images.default }}
-        imagePullPolicy: "IfNotPresent"
+        imagePullPolicy: {{ default $.Values.modelServers.OLlama.imagePullPolicy "IfNotPresent" }} 
         env:
         - name: HF_HOME
           value: "/root/.cache/huggingface"

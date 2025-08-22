@@ -42,7 +42,7 @@ spec:
       initContainers:
       - name: ollama-init
         image: {{ $.Values.modelServers.OLlama.images.default }}
-        imagePullPolicy: "Always"
+        imagePullPolicy: {{ default $.Values.modelServers.OLlama.imagePullPolicy "IfNotPresent" }} 
         env:
         - name: OLLAMA_MODELS
           value: /model
@@ -92,7 +92,7 @@ spec:
       containers:
       - name: ollama-server
         image: {{ $.Values.modelServers.OLlama.images.default }}
-        imagePullPolicy: "IfNotPresent"
+        imagePullPolicy: {{ default $.Values.modelServers.OLlama.imagePullPolicy "IfNotPresent" }} 
         env:
           - name: OLLAMA_HOST
             value: 0.0.0.0:8000

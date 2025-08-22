@@ -6,6 +6,7 @@ imagePullSecrets:
 ui:
   enabled: true
   image: "python:3.13-slim-bookworm"
+  imagePullPolicy: "IfNotPresent"
   replicas: 1
   resources: {}
   nodeSelector: {}
@@ -65,9 +66,11 @@ modelServers:
   VLLM:
     images:
       default: "vllm/vllm-openai:v0.8.3"
+    imagePullPolicy: "IfNotPresent"
   OLlama:
     images:
       default: "ollama/ollama:latest"
+    imagePullPolicy: "IfNotPresent"
 
 
 ###############################################################################

@@ -21,10 +21,43 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 
+
+      initContainers:
+      - name: ui-init
+        image: {{ .Values.ui.image }}
+        imagePullPolicy: {{ default .Values.ui.imagePullPolicy "IfNotPresent" }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "# init start"
+  
+          cd /appdata
+          if [ ! -d ".venv" ]; then
+            echo "# creating virtual environment"
+            python -m venv .venv
+          fi
+          echo "# activating virtual environment"
+          sh /appdata/.venv/bin/activate
+          
+          echo "# downloading requirements"
+          echo "===================================="
+          cat /app/requirements.txt
+          echo "\n===================================="
+          mkdir -p /appdata/downloads
+          pip download -r /app/requirements.txt -d /appdata/downloads 
+
+          echo "# init end"                  
+        volumeMounts:
+        - name: cm-files-volume
+          mountPath: /app
+        - name: pvc-appdata-volume
+          mountPath: /appdata
+
       containers:
       - name: ui-server
         image: {{ .Values.ui.image }}
-        imagePullPolicy: "IfNotPresent"
+        imagePullPolicy: {{ default .Values.ui.imagePullPolicy "IfNotPresent" }}
         env:
         - name: API_BASE
           value: ""
@@ -34,21 +67,14 @@ spec:
         - /bin/sh
         - -c
         - |
-          echo "# init"
-          
-          mkdir -p /appdata
-          cd /appdata
 
-          export PIP_CACHE_DIR=/appdata/.venv/pipcache
-          python -m venv .venv
+          echo "# activating virtual environment"
+          cd /appdata
           sh /appdata/.venv/bin/activate
 
-          pip cache dir
-          pip cache info 
-          pip cache list
-
-          pip install -r /app/requirements.txt 
-
+          echo "# installing requirements"
+          pip install --no-index --find-links=/appdata/downloads -r /app/requirements.txt
+          
           echo "# start"
 
           cd /app
