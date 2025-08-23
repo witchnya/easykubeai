@@ -60,10 +60,10 @@ resourceProfiles:
 catalog:
 
   "gemma3-1b-ollama-cpu":
-    enabled: true
+    enabled: false
 
   "gemma3-1b-ollama-gpu":
-    enabled: false
+    enabled: true
 
   "gemma3-4b-ollama-gpu":
     enabled: false

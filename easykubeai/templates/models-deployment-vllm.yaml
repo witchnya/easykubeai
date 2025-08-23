@@ -56,6 +56,7 @@ spec:
         - /bin/sh
         - -c
         - |
+
           echo "# init"
           
           if [ -n "$HF_TOKEN" ]; then
@@ -136,11 +137,6 @@ spec:
 
         resources:
           # $model 의 resourceProfile 에서 가져온 값은 프로파일명 
-          # 예시) cpu2 이면, .Values.resourceProfiles 에서 cpu2 의 requests, limits 를 가져옴
-          # 예시) nvidia-gpu 이면, .Values.resourceProfiles 에서 nvidia-gpu 의 requests, limits 를 가져옴 
-          requests:
-            cpu: {{ ($rp).requests.cpu }}
-            memory: {{ ($rp).requests.memory }}  
           limits:
             cpu: {{ ($rp).limits.cpu }}
             memory: {{ ($rp).limits.memory }}  

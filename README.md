@@ -27,7 +27,7 @@ Add domain and IP `/etc/hosts` or `C:\Windows\System32\drivers\etc\hosts` File.
 xxx.xxx.xxx.xxx easykubeai.local
 ```
 
-## Test with `open-webui`
+## (Optional) Test with `open-webui`
 * https://github.com/open-webui/open-webui
 * https://github.com/open-webui/helm-charts 
 

@@ -76,28 +76,15 @@ modelServers:
 ###############################################################################
 resourceProfiles:
   cpu:
-    requests:
-      cpu: 4
-      # TODO: Consider making this a ratio that is more common on cloud machines
-      # such as 1:4 CPU:Mem. NOTE: This might need to be adjusted for local clusters.
-      memory: "8Gi"
-      # TODO: Consider adding eph storage requests/limits.
-      # Perhaps this is just needed for GKE Autopilot which defaults
-      # to 1Gi for CPU-only.
-      # ephemeral-storage: "2Gi"
     limits:
       cpu: 12
-      memory: "24Gi"
+      memory: "10Gi"
   
   nvidiaGpu:
     runtimeClassName: "nvidia"
-    requests:
-      nvidia.com/gpu: "1"
-      cpu: 4
-      memory: "4Gi"
     limits:
       nvidia.com/gpu: "1"
-      cpu: 8
+      cpu: 1
       memory: "8Gi"
     # tolerations:
     #   - key: "nvidia.com/gpu"
