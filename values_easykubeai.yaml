@@ -21,29 +21,22 @@ modelCache:
 ###############################################################################
 secrets:
   huggingface:
-    create: true
+    create: false
     token: ""
 
 
 ###############################################################################
 resourceProfiles:
   cpu:
-    # requests:
-    #   cpu: 2
-    #   memory: "8Gi"
     # limits:
     #   cpu: 12
-    #   memory: "24Gi"
+    #   memory: "10Gi"
   
-  nvidia-gpu:
+  nvidiaGpu:
     # runtimeClassName: "nvidia"
-    # requests:
-    #   nvidia.com/gpu: "1"
-    #   cpu: 2
-    #   memory: "4Gi"
     # limits:
     #   nvidia.com/gpu: "1"
-    #   cpu: 4
+    #   cpu: 1
     #   memory: "8Gi"
     # tolerations:
     #   - key: "nvidia.com/gpu"

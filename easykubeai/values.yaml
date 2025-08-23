@@ -13,7 +13,7 @@ ui:
   affinity: {}
   tolerations: []
   pvc:
-    storageClassName: ""
+    storageClassName: "local-path"
     size: "5Gi"
     accessModes:
       - "ReadWriteOnce"
@@ -37,9 +37,9 @@ ingress:
 modelCache:
   mode: "pvc" # "host" or "pvc"
   host:
-    hostPath: "/mnt/c/some/path/for/model" #"/mnt/c/some/path/for/model"
+    hostPath: "/mnt/c/model" #"/mnt/c/some/path/for/model"
   pvc:
-    storageClassName: ""
+    storageClassName: "local-path"
     size: "10Gi"
     accessModes:
       - "ReadWriteOnce"
