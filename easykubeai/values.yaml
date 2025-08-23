@@ -115,6 +115,7 @@ catalog:
   #============================================================================
   # OLLAMA CPU
 
+
   # Deepseek cpu #
   "deepseek-r1-1.5b-ollama-cpu":
     enabled: false
@@ -175,6 +176,7 @@ catalog:
   #============================================================================
   # OLLAMA GPU
 
+
   # Deepseek #
   "deepseek-r1-1.5b-ollama-gpu":
     enabled: false
@@ -183,11 +185,18 @@ catalog:
     modelSize: 1.1Gi
     engine: OLlama
     resourceProfile: nvidiaGpu
-  "deepseek-r1-distill-qwen-7b-ollama-gpu":
+  "deepseek-r1-7b-ollama-gpu":
     enabled: false
     features: [ TextGeneration ]
     url: 'ollama://deepseek-r1:7b'
     modelSize: 4.7Gi
+    engine: OLlama
+    resourceProfile: nvidiaGpu
+  "deepseek-r1-8b-llama-distill-q4_K_M-ollama-gpu":
+    enabled: false
+    features: [ TextGeneration ]
+    url: 'ollama://deepseek-r1:8b-llama-distill-q4_K_M'
+    modelSize: 4.9Gi
     engine: OLlama
     resourceProfile: nvidiaGpu
 
@@ -205,6 +214,13 @@ catalog:
     features: [ TextGeneration ]
     url: 'ollama://gemma3:4b'
     modelSize: 3.3Gi
+    engine: OLlama
+    resourceProfile: nvidiaGpu
+  "gemma3-12b-it-q4_K_M-ollama-gpu":
+    enabled: false
+    features: [ TextGeneration ]
+    url: 'ollama://gemma3:12b-it-q4_K_M'
+    modelSize: 8.1GB
     engine: OLlama
     resourceProfile: nvidiaGpu
 
@@ -229,6 +245,13 @@ catalog:
     features: [ "TextGeneration" ]
     url: "ollama://qwen3:4b"
     modelSize: 2.5Gi
+    engine: OLlama
+    resourceProfile: nvidiaGpu
+  "qwen3-8b-q4_K_M-ollama-gpu":
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "ollama://qwen3:8b-q4_K_M"
+    modelSize: 5.2Gi
     engine: OLlama
     resourceProfile: nvidiaGpu
 
@@ -259,6 +282,7 @@ catalog:
 
   #============================================================================
   # VLLM GPU
+
 
   # Deepseek vllm #
   "deepseek-r1-distill-qwen-1.5b-vllm-gpu":

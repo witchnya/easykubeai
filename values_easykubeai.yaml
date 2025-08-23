@@ -65,6 +65,12 @@ catalog:
   "gemma3-1b-ollama-gpu":
     enabled: false
 
+  "gemma3-4b-ollama-gpu":
+    enabled: false
+
+  "qwen3-8b-q4_K_M-ollama-gpu":
+    enabled: false
+    
   "gemma3-1b-it-vllm-gpu":
     enabled: false
 
