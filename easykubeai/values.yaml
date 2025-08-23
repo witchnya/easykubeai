@@ -280,6 +280,16 @@ catalog:
     resourceProfile: nvidiaGpu
 
 
+    # Mistral #
+  "mistral-7b-ollama-gpu":
+    enabled: false
+    features: [ "TextGeneration" ]
+    url: "ollama://mistral:7b"
+    modelSize: 4.4Gi
+    engine: OLlama
+    resourceProfile: nvidiaGpu
+
+
   #============================================================================
   # VLLM GPU
 
